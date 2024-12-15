@@ -179,3 +179,4 @@ else:
             st.plotly_chart(st.session_state.chart_data)
         else:
             st.warning("No chart data available. Please generate a chart in the 'Category' page.")
+##
