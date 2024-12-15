@@ -24,34 +24,56 @@ def sidebar():
 
 # Front Page Function
 def front_page():
-    st.title("Welcome!")
-
-    # Add custom CSS for animation
+    # Adding custom CSS for background JPG image
     st.markdown("""
     <style>
+    .background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        background-image: url('https://wallup.net/wp-content/uploads/2019/09/902450-electronics-machine-technology-circuit-electronic-computer-technics-detail-psychedelic-abstract-pattern.jpg');
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+    .title {
+        font-size: 2.0rem;
+        font-weight: bold;
+        text-align: center;
+        color: rgb(248, 252, 255);
+    }
     @keyframes flickerAnimation {
         0% { opacity: 1; }
         50% { opacity: 0.5; }
         100% { opacity: 1; }
     }
-
     .animated-title {
         font-size: 2.5rem;
         font-weight: bold;
         text-align: center;
         animation: flickerAnimation 2s infinite;
-        color: #007bff;
+        color: rgb(147, 40, 85);
     }
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div class='animated-title'>Data Visualization Solution</div>", unsafe_allow_html=True)
+    # Background JPG
+    st.markdown("<div class='background'></div>", unsafe_allow_html=True)
+
+    # Title and content
+    st.markdown("<div class='title'>Welcome!</div>", unsafe_allow_html=True)
+    st.markdown("<div class='animated-title'>Data Visualization Solution for Recent Trends in CS Technology</div>", unsafe_allow_html=True)
 
     # Center-align the button
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2, col3 = st.columns([5, 3, 5])
     with col2:
         if st.button("Get Started"):
             st.session_state.page = "main_menu"
+            # Hide background after clicking "Get Started"
+            st.markdown("<style>.background { display: none; }</style>", unsafe_allow_html=True)
 
 # Function to upload and save data to SQLite
 def upload_to_db(file, table_name):
@@ -79,6 +101,9 @@ if 'chart_data' not in st.session_state:
 if st.session_state.page == "front_page":
     front_page()
 else:
+    # Remove background for other pages
+    st.markdown("<style>.background { display: none; }</style>", unsafe_allow_html=True)
+    
     with st.sidebar:
         selected_page = sidebar()
 
@@ -113,7 +138,6 @@ else:
 
             if selected_table:
                 data = pd.read_sql(f"SELECT * FROM {selected_table}", conn)
-               #st.write(data)
 
                 if 'year' in data.columns:
                     years = data['year'].dropna().unique().tolist()
@@ -132,9 +156,6 @@ else:
                 if selected_columns:
                     x_axis = st.selectbox("Select X-axis", options=selected_columns)
                     y_axis = st.selectbox("Select Y-axis", options=[col for col in selected_columns if col != x_axis])
-
-                    
-
                     if st.button("Generate Chart"):
                         if chart_type == "Pie Chart":
                             fig = px.pie(data, names=x_axis, values=y_axis, title="Pie Chart")
@@ -153,7 +174,6 @@ else:
     elif st.session_state.page == "Charts":
         st.title("Charts")
         if st.session_state.chart_data and st.session_state.chart_settings:
-           #st.write(st.session_state.chart_settings)
             columns = st.session_state.chart_settings
             selected_columns = st.multiselect("Select columns for visualization", columns, default=columns)
             st.plotly_chart(st.session_state.chart_data)
