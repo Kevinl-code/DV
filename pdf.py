@@ -8,11 +8,17 @@ import zipfile
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("Go to", ["Charts", "Export"])
 
+# Initialize session state for the figure and file location
+if 'fig' not in st.session_state:
+    st.session_state.fig = None
+if 'file_location' not in st.session_state:
+    st.session_state.file_location = None
+
 # Charts Page
 if page == "Charts":
     st.title("Charts Page")
 
-    # Example chart (you can add more charts here)
+    # Example chart
     data = {
         'data1': [1, 2, 3, 4],
         'data2': [10, 20, 30, 40]
@@ -23,6 +29,9 @@ if page == "Charts":
     ax.plot(data['data2'], label='Data 2')
     ax.set_title("Example Line Chart")
     ax.legend()
+
+    # Store the figure in session state
+    st.session_state.fig = fig
 
     # Display the chart
     st.pyplot(fig)
@@ -50,14 +59,20 @@ elif page == "Export":
         # Call the external script to open file dialog
         result = subprocess.run(['python', 'file_dialog.py'], capture_output=True, text=True)
         file_location = result.stdout.strip()  # Extract the directory path from the script
+        
         if file_location:
+            st.session_state.file_location = file_location  # Save the path in session state
             st.write(f"Selected directory: {file_location}")
         else:
             st.error("No directory selected. Please try again.")
 
+    # Button to save export
     if st.button("Save Export"):
-        # Validate file location
-        if file_location and os.path.isdir(file_location):
+        file_location = st.session_state.file_location  # Retrieve file location
+        fig = st.session_state.fig  # Retrieve the figure
+
+        # Validate file location and figure
+        if fig and file_location and os.path.isdir(file_location):
             # Prepare the chart for export
             if export_type == "PDF":
                 # Save as PDF
@@ -87,4 +102,7 @@ elif page == "Export":
                 fig.savefig(image_path, format="png")
                 st.success(f"Chart saved as image at {image_path}")
         else:
-            st.error("Invalid directory. Please select a valid directory.")
+            if not fig:
+                st.error("No chart found. Please go to the Charts page and generate a chart first.")
+            elif not file_location or not os.path.isdir(file_location):
+                st.error("Invalid directory. Please select a valid directory.")
