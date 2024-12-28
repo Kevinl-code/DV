@@ -3,10 +3,8 @@ import pandas as pd
 import sqlite3
 import plotly.express as px
 from streamlit_option_menu import option_menu
-import matplotlib.pyplot as plt
-import subprocess
 import os
-import zipfile
+import subprocess
 
 # Front Page Function
 def front_page():
@@ -56,23 +54,25 @@ def front_page():
     with col2:
         if st.button("Get Started"):
             st.session_state.page = "Import Data"
+            st.experimental_rerun()
 
 # Sidebar Navigation
 def sidebar():
-    selected = option_menu(
-        menu_title="Main Menu",
-        options=["Import Data", "Category", "Charts", "Export"],
-        icons=["upload", "book", "bar-chart", "download"],
-        menu_icon="cast",
-        default_index=0,
-        orientation="vertical",
-        styles={
-            "container": {"padding": "5px", "background-color": "#100909"},
-            "icon": {"color": "white", "font-size": "25px"},
-            "nav-link": {"font-size": "18px", "text-align": "left", "margin": "0px"},
-            "nav-link-selected": {"background-color": "#D4242B"},
-        },
-    )
+    with st.sidebar:
+        selected = option_menu(
+            menu_title="Main Menu",
+            options=["Import Data", "Category", "Charts", "Export"],
+            icons=["upload", "book", "bar-chart", "download"],
+            menu_icon="cast",
+            default_index=0,
+            orientation="vertical",
+            styles={
+                "container": {"padding": "5px", "background-color": "#100909"},
+                "icon": {"color": "white", "font-size": "25px"},
+                "nav-link": {"font-size": "18px", "text-align": "left", "margin": "0px"},
+                "nav-link-selected": {"background-color": "#D4242B"},
+            },
+        )
     return selected
 
 # Upload and save data to SQLite
@@ -185,7 +185,7 @@ else:
             st.plotly_chart(st.session_state.fig)
             if st.button("Export"):
                 st.session_state.page = "Export"
-                st.rerun()
+                st.experimental_rerun()
         else:
             st.warning("No chart available. Please generate a chart in 'Category' page.")
 
@@ -194,7 +194,7 @@ else:
         st.title("Export Page")
         export_type = st.selectbox("Choose export type:", ["PDF", "ZIP", "Image"])
         file_name = st.text_input("Enter file name (without extension):", value="exported_chart")
-        
+
         # Browse location
         if st.button("Browse File Location"):
             result = subprocess.run(['python', 'file_dialog.py'], capture_output=True, text=True)
@@ -218,3 +218,8 @@ else:
                 elif export_type == "ZIP":
                     image_path = f"{save_path}.png"
                     st.session_state.fig.write_image(image_path)
+                    zip_path = f"{save_path}.zip"
+                    with zipfile.ZipFile(zip_path, 'w') as zipf:
+                        zipf.write(image_path, os.path.basename(image_path))
+                    os.remove(image_path)
+                    st.success(f"Chart saved as ZIP at {zip_path}")
